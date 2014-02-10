@@ -203,6 +203,10 @@ int main()
 	hugooSprite.setFramesPerRect(&fprStandingCenter);
 	hugooSprite.setMovesPerRect(&mprStandingCenter);	
 
+	sf::View view;
+	view.reset(sf::FloatRect(160, 120, 320, 240));
+	window.setView(view);
+
 	sf::Clock clock;
 	while (window.isOpen()){
 		sf::Event event;
@@ -280,7 +284,9 @@ int main()
 			elapsedFrames = 0;
 			sf::Time elapsedTime = clock.restart();
 		}
+		window.setView(window.getDefaultView());
 		window.draw(text);
+		window.setView(view);
 
 		window.display();
 	}
