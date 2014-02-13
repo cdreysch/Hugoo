@@ -61,51 +61,39 @@ public:
 class myGameObject :public sf::Sprite{
 private:	
 	std::vector<myObjectStatus*> availableStatusPtr;
-	std::vector<int> statusNumberStack;
-	int currentStackIndex;	
-public:	
-	void addAvailableStatusPtr(myObjectStatus* statusPtr){
-		availableStatusPtr.push_back(statusPtr);		
-	}	
-	void addStatusToStack(int number){		
-		statusNumberStack.push_back(number);		
+	int currentStatus;	
+	int idleStatusNumber;
+public:
+	void addAvailableStatusPtr(myObjectStatus* ptr){		
+		availableStatusPtr.push_back(ptr);
 	}
 	myObjectStatus* getCurrentStatusPtr(){		
-		return availableStatusPtr.at(statusNumberStack.at(currentStackIndex));
+		return availableStatusPtr.at(currentStatus);
 	}
-	void nextStatus(){
-		if(isIdle() || getCurrentStatusPtr()->hasEnded()){			
-			if(statusNumberStack.size()>2){
-				statusNumberStack.erase(statusNumberStack.begin()+1);
-				currentStackIndex = 1;
-				getCurrentStatusPtr()->restart();
-			}else if(statusNumberStack.size()==2){				
-				currentStackIndex = 1;
-				getCurrentStatusPtr()->restart();
-			}else 
-				setIdle();
-		}
-	}
-	void setStatus(int number){
-		addStatusToStack(number);		
-	}
+	void changeStatus(int number){		
+		currentStatus = number;
+		getCurrentStatusPtr()->restart();
+	}	
+	void setIdleStatusNumber(int number){		
+		idleStatusNumber = number;
+	}	
 	bool isIdle(){
-		return currentStackIndex == 0;
+		return currentStatus == idleStatusNumber;
 	}
 	void setIdle(){
-		currentStackIndex = 0;
-		getCurrentStatusPtr()->restart();
+		changeStatus(idleStatusNumber);
 	}
-	void update() {
-		if(isIdle() && statusNumberStack.size()>1){
-			currentStackIndex == 1;
-		}
+	void setStatus(int number){
+		if(number!=currentStatus)
+			changeStatus(number);
+	}
+	void update() {		
 		if(getCurrentStatusPtr()->tick()){			
 			setTextureRect(getCurrentStatusPtr()->getCurrentActionTrigger().textureRect);			
 			move(getCurrentStatusPtr()->getCurrentActionTrigger().moveVector);				
 		}
 		if(getCurrentStatusPtr()->hasEnded())
-			nextStatus();
+			setIdle();
 	}
 };
 
@@ -338,7 +326,7 @@ int main()
 	hugooSprite.addAvailableStatusPtr(&hugooStandingCenter);
 	hugooSprite.addAvailableStatusPtr(&hugooMovingRight);
 	hugooSprite.addAvailableStatusPtr(&hugooMovingLeft);
-	hugooSprite.addStatusToStack(0);
+	hugooSprite.setIdleStatusNumber(0);
 	hugooSprite.setIdle();
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
