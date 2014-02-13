@@ -2,6 +2,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
 
 #define mainpath_win "C:/Users/cdreysch/Hugoo/"
 #define mainpath_unix ""
@@ -33,7 +35,7 @@ public:
 		return nextAT;
 	}
 	bool hasEnded(){		
-		return (currentStatusFrame>=totalStatusFrames);
+		return (currentStatusFrame>totalStatusFrames);
 	}
 	void restart(){
 		currentTriggerIndex = 0;
@@ -41,14 +43,16 @@ public:
 	}
 
 	int tick(){
-		if(!hasEnded()) {
+		if(hasEnded()) 
+			return 0;
+		else {
 			currentStatusFrame++;				
 			if(currentStatusFrame==getNextActionTrigger().triggerFrame){			
 				currentTriggerIndex++;				
 				return 1;		
-			}
-		}
-		return 0;
+			}else 
+				return 0;
+		}		
 	}	
 	myObjectStatus(sf::IntRect textureRect,int totalFrames){
 		totalStatusFrames = totalFrames;		
@@ -63,7 +67,16 @@ private:
 	std::vector<myObjectStatus*> availableStatusPtr;
 	int currentStatus;	
 	int idleStatusNumber;
+	std::vector<bool> interruptTable;
+
 public:
+	void setInterruptTable(std::vector<bool> bits){
+		interruptTable = bits;
+	}
+	bool isInterruptable(int curStatus,int newStatus){
+		return interruptTable.at(curStatus*availableStatusPtr.size()+newStatus);
+	}
+
 	void addAvailableStatusPtr(myObjectStatus* ptr){		
 		availableStatusPtr.push_back(ptr);
 	}
@@ -84,7 +97,7 @@ public:
 		changeStatus(idleStatusNumber);
 	}
 	void setStatus(int number){
-		if(number!=currentStatus)
+		if(isInterruptable(currentStatus,number))
 			changeStatus(number);
 	}
 	void update() {		
@@ -188,6 +201,8 @@ private:
 
 int main()
 {
+	srand (time(NULL));
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	// VideoModes
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +291,7 @@ int main()
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	sf::Image hugooImage;	
-	if (!hugooImage.loadFromFile(std::string("src/textures/hugoo.bmp").insert(0,mainpath))){
+	if (!hugooImage.loadFromFile(std::string("src/textures/hugoo.png").insert(0,mainpath))){
 		// error...
 	}	
 	hugooImage.createMaskFromColor(alphaColor);	
@@ -288,6 +303,13 @@ int main()
 	hugooStandingCenter.addActionTrigger(300, sf::IntRect(3*tilesize,0*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
 	hugooStandingCenter.addActionTrigger(400, sf::IntRect(4*tilesize,0*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
 	hugooStandingCenter.addActionTrigger(500, sf::IntRect(5*tilesize,0*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
+
+	/////////////////////////////// STATUS: Digging Below Center /////////////////////////////////////////////
+	myObjectStatus hugooDiggingBelowCenter = myObjectStatus(sf::IntRect(3*tilesize,0*tilesize,tilesize,3*tilesize),22);
+	hugooDiggingBelowCenter.addActionTrigger(3, sf::IntRect(0*tilesize,6*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
+	hugooDiggingBelowCenter.addActionTrigger(6, sf::IntRect(1*tilesize,6*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
+	hugooDiggingBelowCenter.addActionTrigger(16, sf::IntRect(0*tilesize,6*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
+	hugooDiggingBelowCenter.addActionTrigger(19, sf::IntRect(3*tilesize,0*tilesize,tilesize,3*tilesize), sf::Vector2f(0.f,0.f));
 
 	/////////////////////////////// STATUS: Moving Right ////////////////////////////////////////////
 	myObjectStatus hugooMovingRight = myObjectStatus(sf::IntRect(0*tilesize,3*tilesize,tilesize,3*tilesize),33);
@@ -315,6 +337,10 @@ int main()
 	hugooMovingLeft.addActionTrigger(27, sf::IntRect(5*tilesize,3*tilesize,-tilesize,3*tilesize), sf::Vector2f(-2.f,0.f));
 	hugooMovingLeft.addActionTrigger(30, sf::IntRect(6*tilesize,3*tilesize,-tilesize,3*tilesize), sf::Vector2f(-2.f,0.f));
 
+	//////////////////////////////// Interrupt Matrix (als Vektor) //////////////////////////////////
+	static const int bits[] = {1,1,1,1, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+	std::vector<bool> hugooInterruptTable (bits, bits + sizeof(bits) / sizeof(bits[0]));	
+
 	sf::Texture hugooTexture;
 	if (!hugooTexture.loadFromImage(hugooImage)){
 		// error...
@@ -326,6 +352,8 @@ int main()
 	hugooSprite.addAvailableStatusPtr(&hugooStandingCenter);
 	hugooSprite.addAvailableStatusPtr(&hugooMovingRight);
 	hugooSprite.addAvailableStatusPtr(&hugooMovingLeft);
+	hugooSprite.addAvailableStatusPtr(&hugooDiggingBelowCenter);
+	hugooSprite.setInterruptTable(hugooInterruptTable);
 	hugooSprite.setIdleStatusNumber(0);
 	hugooSprite.setIdle();
 
@@ -355,7 +383,8 @@ int main()
 					//hugooSprite.setStatus(0);
 					break;
 				case sf::Keyboard::F: // F pressed : Hugoo do something!
-					map.changeTile(hugooSprite.getPosition(),12);
+					hugooSprite.setStatus(3);
+					map.changeTile(hugooSprite.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);
 					break;
 				case sf::Keyboard::T: // T pressed : toggle following					
 					toggleViewFollowHugoo = !toggleViewFollowHugoo;
