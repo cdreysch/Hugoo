@@ -5,19 +5,19 @@ void myGameObject::setInterruptTable(std::vector<bool> bits){
 }
 
 bool myGameObject::isInterruptable(int curStatus,int newStatus){
-    return interruptTable.at(curStatus*availableStatusPtr.size()+newStatus);
+    return interruptTable.at(curStatus*availableStatus.size()+newStatus);
 }
 
-void myGameObject::addAvailableStatusPtr(myObjectStatus* ptr){		
-    availableStatusPtr.push_back(ptr);
+void myGameObject::addAvailableStatus(myObjectStatus os){		
+    availableStatus.push_back(os);
 }
 
-void myGameObject::setAvailableStatusPtr(std::vector<myObjectStatus*> asptr){
-    availableStatusPtr = asptr;
+void myGameObject::setAvailableStatus(std::vector<myObjectStatus> aos){
+    availableStatus = aos;
 }
 
 myObjectStatus* myGameObject::getCurrentStatusPtr(){		
-    return availableStatusPtr.at(currentStatus);
+    return &availableStatus.at(currentStatus);
 }
 
 void myGameObject::changeStatus(int number){		
