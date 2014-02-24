@@ -7,7 +7,71 @@
 
 #define mainpath_win "C:/Users/cdreysch/Hugoo/"
 #define mainpath_unix ""
-#define mainpath mainpath_unix
+#define mainpath mainpath_win
+
+class myTree :public myGameObject {
+public:
+	myTree(int x, int y, sf::Texture* textur, std::vector<myObjectStatus*> asptr, std::vector<bool> interruptTable) {		
+	setPosition(sf::Vector2f(x, y)); 
+	setTexture(*textur);
+	setAvailableStatusPtr(asptr);
+	setInterruptTable(interruptTable);
+    setIdleStatusNumber(0);
+	setIdle();
+	setStatus(1);
+	}
+};
+
+class mySequence {
+private:
+	std::string name;
+	std::vector<sf::IntRect> textureRects;
+	std::vector<sf::Vector2f> textureDispositions;
+public:
+	void addRect(float x, float y, float width, float height, float dispoX, float dispoY, float factor) {
+		textureRects.emplace_back(sf::IntRect(x*factor,y*factor,width*factor,height*factor));
+		textureDispositions.emplace_back(sf::Vector2f(dispoX*factor,dispoY*factor));
+	}
+	sf::IntRect getRectAt(unsigned int index){
+		return textureRects.at(index);
+	}
+	sf::Vector2f getDispositionAt(unsigned int index){
+		return textureDispositions.at(index);
+	}
+	unsigned int getLength(){
+		return textureDispositions.size();
+	}
+	std::string getName(){
+		return name;
+	}
+	mySequence(std::string Name){
+		name = Name;
+	}
+};
+
+class myTextureTable {
+private:
+	sf::Texture texture;
+	std::vector<mySequence> availableSequences;	
+public:
+
+	myTextureTable(std::string filename){
+		sf::Image srcImage;			
+    if (!srcImage.loadFromFile(std::string("src/textures/tree.png").insert(0,mainpath))){
+	// error...
+    }	
+    srcImage.createMaskFromColor(sf::Color(0,0,0));	
+    if (!texture.loadFromImage(srcImage)){
+	// error...
+    }	
+	}
+	void addRect(std::string name, float x, float y, float width, float height, float dispoX, float dispoY, float factor) {
+		// falls es noch keine sequenz mit name = name gibt: erstelle neue sequenz und einen ersten eintrag
+		// sonst: hänge eintrag an sequenz mit name=name an
+	}
+};
+
+
 
 int main()
 {
@@ -97,7 +161,7 @@ int main()
 	return -1;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Hugoo
+    // Game Objects
     /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /* GameObjects sollten später durch eine Methode von GameObject aus einer Konfigurationsdatei 
@@ -110,6 +174,7 @@ int main()
      * Die Beschreibung der Objekte innerhalb der Welt sollte seperat zur Geographie abgespeichert werden.
      */
 
+	////////////////////////////// Hugoo //////////////////////////////////////////////////////////
     sf::Image hugooImage;	
     if (!hugooImage.loadFromFile(std::string("src/textures/hugoo.png").insert(0,mainpath))){
 	// error...
@@ -136,6 +201,41 @@ int main()
     hugooSprite.setInterruptTable(hugooInterruptTable);
     hugooSprite.setIdleStatusNumber(0);
     hugooSprite.setIdle();
+
+	////////////////////////////// Tree //////////////////////////////////////////////////////////
+	sf::Image treeImage;			
+    if (!treeImage.loadFromFile(std::string("src/textures/tree.png").insert(0,mainpath))){
+	// error...
+    }	
+    treeImage.createMaskFromColor(alphaColor);
+	sf::Texture treeTexture;
+    if (!treeTexture.loadFromImage(treeImage)){
+	// error...
+    }	
+	sf::Texture treeTexture2;
+    if (!treeTexture2.loadFromImage(treeImage)){
+	// error...
+    }
+
+	#include "treeStatus.cfg"
+	std::vector<myObjectStatus*> treeStatusPtr;
+	treeStatusPtr.push_back(&treeStanding);
+	treeStatusPtr.push_back(&treeGrowing);
+
+    const int tbits[] = {1,1, 1,1};
+    std::vector<bool> treeInterruptTable (tbits, tbits + sizeof(tbits) / sizeof(tbits[0]));	    		
+
+	myTree tree1 = myTree(25*tilesize,14*tilesize,&treeTexture,treeStatusPtr,treeInterruptTable);
+	myTree tree2 = myTree(15*tilesize,14*tilesize,&treeTexture2,treeStatusPtr,treeInterruptTable);	
+	
+	/* PROBLEM: Es wird bei jeder Instanz von myTree der SELBE Status verändert. 
+	 * LÖSUNG: Es sollte eine Klasse Animation eingeführt werden, mit definierten Rechtecken in einer Reihenfolge und zugehörigen Verschiebungskoordinaten. 
+	 * Für jede Objektklasse müsste die Animationen nur als Zeiger übergeben werden.
+	 * Zusätzlich wird für die Klasse Status benutzt, um für jede Instanz der Objektklassen den derzeitigen Status zu verwalten.
+	 * ActionTrigger würden dann nur die Nummer des Rechtecks in der jeweiligen Animation angeben, nicht das Rechteck selbst.
+	 */
+	
+    //
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // Game Loop
@@ -183,7 +283,7 @@ int main()
 			break;
 		    case sf::Keyboard::D:
 			toggleViewFollowHugoo = false;
-			view.move(8.f,0.f);
+			view.move(8.f,0.f);			
 			break;
 		    case sf::Keyboard::F11: // F11 pressed: toggle fullscreen 
 			if (!isFullscreen) {
@@ -210,6 +310,12 @@ int main()
 	window.setView(view);
 	window.draw(map);
 	hugooSprite.update();
+	tree1.update();
+	tree2.update();
+	
+	window.draw(tree1);
+	window.draw(tree2);	
+	
 	window.draw(hugooSprite);
 
 	totalFrames++;

@@ -15,7 +15,8 @@ class myGameObject :public sf::Sprite{
   public:
     void setInterruptTable(std::vector<bool> bits);
     bool isInterruptable(int curStatus,int newStatus);
-    void addAvailableStatusPtr(myObjectStatus* ptr);		
+    void addAvailableStatusPtr(myObjectStatus* ptr);
+	void setAvailableStatusPtr(std::vector<myObjectStatus*> asptr);
     myObjectStatus* getCurrentStatusPtr();		
     void changeStatus(int number);		
     void setIdleStatusNumber(int number);		

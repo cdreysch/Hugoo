@@ -12,6 +12,10 @@ void myGameObject::addAvailableStatusPtr(myObjectStatus* ptr){
     availableStatusPtr.push_back(ptr);
 }
 
+void myGameObject::setAvailableStatusPtr(std::vector<myObjectStatus*> asptr){
+    availableStatusPtr = asptr;
+}
+
 myObjectStatus* myGameObject::getCurrentStatusPtr(){		
     return availableStatusPtr.at(currentStatus);
 }
