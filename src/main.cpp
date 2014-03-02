@@ -23,15 +23,40 @@ class myTree :public myGameObject {
     }
 };
 
-class myHuman :public myAnimatedObject {
+class myHuman {
   public:
+    myHuman(int x,int y, myAnimationData* bodyDataPtr, myAnimationData* hoseDataPtr){
+      body = myAnimatedObject(x,y,bodyDataPtr);
+      hose = myAnimatedObject(x,y,hoseDataPtr);
+    }
     void setInterruptionTable(bool* bits[]){
 
+    }
+    void draw(sf::RenderWindow *target){
+      target->draw(body);
+      target->draw(hose);
+    }
+    void update(){
+      body.update();
+      hose.update();
+    }
+    void moveRight(){
+      body.changeSequence(2);
+      hose.changeSequence(2);
+    }
+    void beIdle(){
+      body.changeSequence(0);
+      hose.changeSequence(0);
+    }
+    void plant(){
+      body.changeSequence(1);
+      hose.changeSequence(1);
     }
 
   private:
     std::vector<bool> interruptionTable;
-
+    myAnimatedObject body;
+    myAnimatedObject hose;
 };
 
 int main()
@@ -222,14 +247,15 @@ int main()
   hugooData.addSequence(seq1);
   hugooData.addSequence(seq2);
 
-  //myAnimationData huHoseData = myAnimationData(std::string("src/textures/huHose1.png").insert(0,mainpath));
-  //huHoseData.addSequence(seq0);
-  //huHoseData.addSequence(seq1);
-  //huHoseData.addSequence(seq2);
+  myAnimationData huHoseData = myAnimationData(std::string("src/textures/huHose1.png").insert(0,mainpath));
+  huHoseData.addSequence(seq0);
+  huHoseData.addSequence(seq1);
+  huHoseData.addSequence(seq2);
 
   myAnimatedObject hugoo2 = myAnimatedObject(16*tilesize,14*tilesize,&hugooData);
   //hugoo2.addQuad(16*tilesize,14*tilesize,&huHoseData);
   //hugoo2.setQuadColor(1,sf::Color(205,205,150,255));
+  myHuman hugoo3 = myHuman(12*tilesize,14*tilesize,&hugooData,&huHoseData);
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   // Game Loop
@@ -250,16 +276,19 @@ int main()
 	  case sf::Keyboard::L: // l pressed : Hugoo move right! 
 	    hugooSprite.setStatus(1);
 	    hugoo2.changeSequence(2);
+	    hugoo3.moveRight();
 	    break;
 	  case sf::Keyboard::H: // h pressed : Hugoo move left! 
 	    hugooSprite.setStatus(2);
 	    break;
 	  case sf::Keyboard::J: // j pressed : Hugoo stop moving! 
 	    hugoo2.changeSequence(0);
+	    hugoo3.beIdle();
 	    break;
 	  case sf::Keyboard::F: // F pressed : Hugoo do something!
 	    hugooSprite.setStatus(3);
 	    hugoo2.changeSequence(1);
+	    hugoo3.plant();
 	    map.changeTile(hugooSprite.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);
 	    break;
 	  case sf::Keyboard::T: // T pressed : toggle following					
@@ -308,6 +337,9 @@ int main()
     hugooSprite.update();
     tree1.update();
     tree2.update();
+    
+    hugoo3.update();
+    hugoo3.draw(&window);
 
     window.draw(tree1);
     window.draw(tree2);	

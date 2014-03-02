@@ -5,32 +5,33 @@
 class myAnimatedObject :public sf::Drawable, public sf::Transformable {
   public:
     myAnimatedObject(int px, int py, myAnimationData* ptr);
-    void updateQuadSize(unsigned int quad_index);
-    void updateQuadTexture(unsigned int quad_index);
-    void setQuadColor(unsigned int quad_index, sf::Color color);	
-    void updateQuad(unsigned int quad_index);
+    myAnimatedObject();
+    void updateQuadSize();
+    void updateQuadTexture();
+    void setQuadColor(sf::Color color);	
+    void updateQuad();
     void update();
-    void moveQuad(unsigned int quad_index, sf::Vector2f* mov);
-    void changeQuadSequence(unsigned int quad_index, unsigned int sequence_index);
+    void moveQuad(sf::Vector2f* mov);
+    void changeQuadSequence(unsigned int sequence_index);
     void changeSequence(unsigned int sequence_index);
     void addQuad(int px, int py, myAnimationData* ptr);
+    void setActiveTextureIndex(unsigned int index);
 
   private:
     sf::VertexArray m_vertices;	
-    std::vector<sf::Vector2f> positions;		
-    std::vector<myAnimationData*> dataPtr;
-    std::vector<unsigned int> currentSequenceIndices;
-    std::vector<unsigned int> currentRectIndices;
-    std::vector<unsigned int> frameCounter;
+    sf::Vector2f position;		
+    myAnimationData* dataPtr;
+    unsigned int currentSequenceIndex;
+    unsigned int currentRectIndex;
+    unsigned int frameCounter;
+    unsigned int activeTextureIndex;
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const{
       states.transform *= getTransform();	
-      for(unsigned int qi=0;qi<dataPtr.size();qi++){
-	for(unsigned int ti=0;ti<dataPtr.at(qi)->getTexturesLength();ti++){				
-	  states.texture = dataPtr.at(qi)->getTexturePtrAt(ti); 
-	  target.draw(&m_vertices[qi*4],4,sf::Quads, states);  
-	}
-      }			
+//	for(unsigned int ti=0;ti<activeTextureIndices.size();ti++){				
+	  states.texture = dataPtr->getTexturePtrAt(activeTextureIndex); 
+	  target.draw(&m_vertices[0],4,sf::Quads, states);  
+//	}
     }
 };
 
