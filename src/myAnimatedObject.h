@@ -8,14 +8,14 @@ class myAnimatedObject :public sf::Drawable, public sf::Transformable {
     myAnimatedObject();
     void updateQuadSize();
     void updateQuadTexture();
-    void setQuadColor(sf::Color color);	
-    void updateQuad();
+    void setQuadColor(sf::Color color);	    
     void update();
-    void moveQuad(sf::Vector2f* mov);
-    void changeQuadSequence(unsigned int sequence_index);
+    void move(sf::Vector2f* mov);    
     void changeSequence(unsigned int sequence_index);
+	unsigned int getSequenceIndex(){return currentSequenceIndex;}
     void addQuad(int px, int py, myAnimationData* ptr);
     void setActiveTextureIndex(unsigned int index);
+	bool hasEnded();
 
   private:
     sf::VertexArray m_vertices;	

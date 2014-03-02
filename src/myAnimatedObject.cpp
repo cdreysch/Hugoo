@@ -41,37 +41,31 @@ void myAnimatedObject::setQuadColor(sf::Color color){
   quad[3].color = color;
 }
 
-void myAnimatedObject::updateQuad(){			
-  if(frameCounter>dataPtr->getSequencePtr(currentSequenceIndex)->getEndFrame()){
+void myAnimatedObject::update(){			
+  if(hasEnded()){
     frameCounter = 0;			
   }
   for(unsigned int i = 0; i<dataPtr->getSequencePtr(currentSequenceIndex)->getLength();i++){			
     if(frameCounter==dataPtr->getSequencePtr(currentSequenceIndex)->getTriggerFrameAt(i)){				
       currentRectIndex = i;				
       updateQuadTexture();
-      moveQuad(dataPtr->getSequencePtr(currentSequenceIndex)->getMoveAt(i));				
+      move(dataPtr->getSequencePtr(currentSequenceIndex)->getMoveAt(i));				
     }
   }	
   frameCounter += 1;				
 }
-
-void myAnimatedObject::update(){
-    updateQuad();		
+bool myAnimatedObject::hasEnded(){
+	return frameCounter>dataPtr->getSequencePtr(currentSequenceIndex)->getEndFrame();
 }
-
-void myAnimatedObject::moveQuad(sf::Vector2f* mov){
+void myAnimatedObject::move(sf::Vector2f* mov){
   position += *mov;
   updateQuadSize();
 }
 
-void myAnimatedObject::changeQuadSequence(unsigned int sequence_index){
+void myAnimatedObject::changeSequence(unsigned int sequence_index){
   currentRectIndex = 0;
   frameCounter = 0;
   currentSequenceIndex = sequence_index;
-}
-
-void myAnimatedObject::changeSequence(unsigned int sequence_index){
-    changeQuadSequence(sequence_index);	
 }
 
 void myAnimatedObject::addQuad(int px, int py, myAnimationData* ptr) {
