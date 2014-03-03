@@ -50,7 +50,7 @@ bool myTileMap::load(const std::string& tileset, sf::Vector2u tileSize, std::vec
 
 int myTileMap::changeTile(sf::Vector2f pos, unsigned int tileNumber)    {
     int x = (int)pos.x/m_tilesize.x;
-    int y = ((int)pos.y/m_tilesize.y)+2;
+    int y = ((int)pos.y/m_tilesize.y);
 
     // find its position in the tileset texture
     int tu = tileNumber % (m_tileset.getSize().x / m_tilesize.x);

@@ -16,6 +16,8 @@ class myAnimatedObject :public sf::Drawable, public sf::Transformable {
     void addQuad(int px, int py, myAnimationData* ptr);
     void setActiveTextureIndex(unsigned int index);
 	bool hasEnded();
+	sf::Vector2f getPosition(){return position;}
+	sf::Vector2f getDrawingPosition();
 
   private:
     sf::VertexArray m_vertices;	

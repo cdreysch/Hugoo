@@ -2,7 +2,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include "myGameObject.h"
 #include "myTileMap.h"
 #include "myAnimatedObject.h"
 
@@ -10,17 +9,81 @@
 #define mainpath_unix ""
 #define mainpath mainpath_win
 
-class myTree :public myGameObject {
+class myTree {
 public:
-	myTree(int x, int y, sf::Texture* textur, std::vector<myObjectStatus> aos, std::vector<bool> interruptTable) {		
-		setPosition(sf::Vector2f(x, y)); 
-		setTexture(*textur);
-		setAvailableStatus(aos);
-		setInterruptTable(interruptTable);
-		setIdleStatusNumber(0);
-		setIdle();
-		setStatus(1);
+	myTree(int x,int y, myAnimationData* woodDataPtr, myAnimationData* leafsDataPtr){	
+		const bool bits[] = {1,1, 1,0};
+		interruptionTable.insert(interruptionTable.begin(), bits, bits + sizeof(bits)/sizeof(bits[0]));		
+		wood = myAnimatedObject(x,y,woodDataPtr);
+		leafs = myAnimatedObject(x,y,leafsDataPtr);	
+		color = sf::Color(55,155,55,255);
+		leafs.setQuadColor(color);
+		currentStatus=0;		
+		leafs.setActiveTextureIndex(0);
+		isDead = 0;
+		ticks= 0L;
 	}
+	
+	void draw(sf::RenderWindow *target){
+		target->draw(wood);
+		if (!isDead)
+		target->draw(leafs);
+	}
+	void update(){
+		ticks++;
+		if (ticks%50 == 0){
+			color += sf::Color(1,0,0,-10);
+			if (ticks>200*50) {
+				ticks = 0L;
+				toggleDead();
+			}
+			leafs.setQuadColor(color);
+		}
+		wood.update();
+		leafs.update();
+		if(wood.hasEnded())
+			beIdle();
+	}
+	void grow(){	  
+		setCurrentStatus(1);      
+	}	
+	void beIdle(){			
+		setCurrentStatus(0);		
+	}
+	
+	void setCurrentStatus(unsigned int index){
+		if (isInterruptable(currentStatus, index)){
+		currentStatus = index;	
+		wood.changeSequence(index);
+		leafs.changeSequence(index);		
+		}
+	}
+	void toggleDead(){
+		isDead = !isDead;
+		color = sf::Color(55,155,55,255);
+		std::cout << isDead << std::endl;		
+	}
+	bool isIdle(){
+		return wood.getSequenceIndex()==0;
+	}
+	bool isInterruptable(int curStatus,int newStatus){		
+		return interruptionTable.at(curStatus*2+newStatus);
+	}
+	sf::Vector2f getPosition(){
+		position = wood.getPosition();
+		return position;
+	}
+
+
+private:
+	std::vector<bool> interruptionTable;
+	sf::Vector2f position;
+	myAnimatedObject wood;
+	myAnimatedObject leafs;	
+	unsigned int currentStatus;
+	bool isDead;
+	sf::Color color;
+	unsigned long ticks;
 };
 
 class myHuman {
@@ -29,12 +92,12 @@ public:
 		const bool bits[] = {1,1,1,1, 1,0,0,0, 1,0,0,0, 1,0,0,0};
 		interruptionTable.insert(interruptionTable.begin(), bits, bits + sizeof(bits)/sizeof(bits[0]));		
 		body = myAnimatedObject(x,y,bodyDataPtr);
-		hose = myAnimatedObject(x,y,hoseDataPtr);
-		setInterruptionTable(bits);
-		currentStatus=0;
+		hose = myAnimatedObject(x,y,hoseDataPtr);	
+		hose.setQuadColor(sf::Color(155,55,55,255));
+		currentStatus=0;		
+		body.setActiveTextureIndex(1);
 	}
-	void setInterruptionTable(const bool bits[]){		
-	}
+	
 	void draw(sf::RenderWindow *target){
 		target->draw(body);
 		target->draw(hose);
@@ -47,6 +110,9 @@ public:
 	}
 	void moveRight(){	  
 		setCurrentStatus(2);      
+	}
+	void moveLeft(){	  
+		setCurrentStatus(3);      
 	}
 	void beIdle(){			
 		setCurrentStatus(0);		
@@ -67,10 +133,15 @@ public:
 	bool isInterruptable(int curStatus,int newStatus){		
 		return interruptionTable.at(curStatus*4+newStatus);
 	}
+	sf::Vector2f getPosition(){
+		position = body.getPosition();
+		return position;
+	}
 
 
 private:
 	std::vector<bool> interruptionTable;
+	sf::Vector2f position;
 	myAnimatedObject body;
 	myAnimatedObject hose;	
 	unsigned int currentStatus;
@@ -79,7 +150,7 @@ private:
 int main()
 {
 	srand (time(NULL));
-
+	
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	// VideoModes
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,118 +238,47 @@ int main()
 	// Game Objects
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/* GameObjects sollten später durch eine Methode von GameObject aus einer Konfigurationsdatei 
-	* (pro Object) eingelesen werden. Auch der Name der Textur könnte dort hinterlegt sein.
-	* Wie es bei Erben von GameObject sein soll, weiß ich noch nicht...
-	* Eventuell muss die entsprechende Methode überschrieben werden, um zusätzliche Attribute einzulesen.
-	* 
-	* Am Ende sollten die benötigten GameObjects direkt aus der Weltbeschreibung generiert werden.
-	* (zB. liegt ein "Hugoo" auf irgendeiner Koordiante -> try myGameObject('Hugoo.cfg',...))
-	* Die Beschreibung der Objekte innerhalb der Welt sollte seperat zur Geographie abgespeichert werden.
-	*/
-
 	////////////////////////////// Hugoo //////////////////////////////////////////////////////////
-	sf::Image hugooImage;	
-	if (!hugooImage.loadFromFile(std::string("src/textures/hugoo.png").insert(0,mainpath))){
-		// error...
-	}	
-	hugooImage.createMaskFromColor(alphaColor);	
+	
 
-#include "hugooStatus.cfg"
-
-	const int bits[] = {1,1,1,1, 0,0,0,0, 0,0,0,0, 0,0,0,0};
-	std::vector<bool> hugooInterruptTable (bits, bits + sizeof(bits) / sizeof(bits[0]));	
-
-	sf::Texture hugooTexture;
-	if (!hugooTexture.loadFromImage(hugooImage)){
-		// error...
-	}		
-
-	myGameObject hugooSprite;
-	hugooSprite.setTexture(hugooTexture);	
-	hugooSprite.setPosition(sf::Vector2f(20*tilesize, 12*tilesize));
-	hugooSprite.addAvailableStatus(hugooStandingCenter);
-	hugooSprite.addAvailableStatus(hugooMovingRight);
-	hugooSprite.addAvailableStatus(hugooMovingLeft);
-	hugooSprite.addAvailableStatus(hugooDiggingBelowCenter);
-	hugooSprite.setInterruptTable(hugooInterruptTable);
-	hugooSprite.setIdleStatusNumber(0);
-	hugooSprite.setIdle();
-
-	////////////////////////////// Tree //////////////////////////////////////////////////////////
-	sf::Image treeImage;			
-	if (!treeImage.loadFromFile(std::string("src/textures/tree.png").insert(0,mainpath))){
-		// error...
-	}	
-	treeImage.createMaskFromColor(alphaColor);
-	sf::Texture treeTexture;
-	if (!treeTexture.loadFromImage(treeImage)){
-		// error...
-	}	
-	sf::Texture treeTexture2;
-	if (!treeTexture2.loadFromImage(treeImage)){
-		// error...
-	}
-
-#include "treeStatus.cfg"
-	std::vector<myObjectStatus> treeStatus;
-	treeStatus.push_back(treeStanding);
-	treeStatus.push_back(treeGrowing);
-
-	const int tbits[] = {1,1, 1,1};
-	std::vector<bool> treeInterruptTable (tbits, tbits + sizeof(tbits) / sizeof(tbits[0]));	    		
-
-	myTree tree1 = myTree(25*tilesize,14*tilesize,&treeTexture,treeStatus,treeInterruptTable);
-	myTree tree2 = myTree(15*tilesize,14*tilesize,&treeTexture2,treeStatus,treeInterruptTable);	
-
-	/* PROBLEM: Es wird bei jeder Instanz von myTree der SELBE Status verändert. 
-	* LÖSUNG: Es sollte eine Klasse Animation eingeführt werden, mit definierten Rechtecken in einer Reihenfolge und zugehörigen Verschiebungskoordinaten. 
-	* Für jede Objektklasse müsste die Animationen nur als Zeiger übergeben werden.
-	* Zusätzlich wird für die Klasse Status benutzt, um für jede Instanz der Objektklassen den derzeitigen Status zu verwalten.
-	* ActionTrigger würden dann nur die Nummer des Rechtecks in der jeweiligen Animation angeben, nicht das Rechteck selbst.
-	*/
-
-	mySequence seq0 = mySequence("Standing",600);
-	seq0.addEntry(0,	0,0,1,3,	0,-2,	tilesize,	0,0);
-	seq0.addEntry(100,	1,0,1,3,	0,-2,	tilesize,	0,0);
-	seq0.addEntry(200,	2,0,1,3,	0,-2,	tilesize,	0,0);
-	seq0.addEntry(300,	3,0,1,3,	0,-2,	tilesize,	0,0);
-	seq0.addEntry(400,	4,0,1,3,	0,-2,	tilesize,	0,0);
-	seq0.addEntry(500,	5,0,1,3,	0,-2,	tilesize,	0,0);
-
-	mySequence seq1 = mySequence("Planting",30);
-	seq1.addEntry(0,	3,0,1,3,	0,-2,	tilesize,	0,0);
-	seq1.addEntry(10,	0,6,1,3,	0,-2,	tilesize,	0,0);
-	seq1.addEntry(20,	1,6,1,3,	0,-2,	tilesize,	0,0);
-
-	mySequence seq2 = mySequence("Moving Right",50);
-	seq2.addEntry(0,	0,3,1,3,	0,-2,	tilesize,	0,0);
-	seq2.addEntry(10,	1,3,1,3,	0,-2,	tilesize,	0,0);
-	seq2.addEntry(20,	2,3,1,3,	0,-2,	tilesize,	2,0);
-	seq2.addEntry(30,	3,3,1,3,	0,-2,	tilesize,	2,0);
-	seq2.addEntry(40,	4,3,1,3,	0,-2,	tilesize,	2,0);
-
-	myAnimationData hugooData = myAnimationData(std::string("src/textures/huNaked.png").insert(0,mainpath));
-	hugooData.addTexture(std::string("src/textures/huHose1.png").insert(0,mainpath));
+	#include "hugooStatus.cfg"
+	
+	myAnimationData hugooData = myAnimationData(std::string("src/textures/huNaked1.png").insert(0,mainpath));
+	hugooData.addTexture(std::string("src/textures/huNaked2.png").insert(0,mainpath));
 	hugooData.addSequence(seq0);
 	hugooData.addSequence(seq1);
 	hugooData.addSequence(seq2);
+	hugooData.addSequence(seq3);	
 
 	myAnimationData huHoseData = myAnimationData(std::string("src/textures/huHose1.png").insert(0,mainpath));
 	huHoseData.addSequence(seq0);
 	huHoseData.addSequence(seq1);
 	huHoseData.addSequence(seq2);
+	huHoseData.addSequence(seq3);
+		
+	myHuman hugoo = myHuman(12*tilesize,14*tilesize,&hugooData,&huHoseData);
 
-	myAnimatedObject hugoo2 = myAnimatedObject(16*tilesize,14*tilesize,&hugooData);
-	//hugoo2.addQuad(16*tilesize,14*tilesize,&huHoseData);
-	//hugoo2.setQuadColor(1,sf::Color(205,205,150,255));
-	myHuman hugoo3 = myHuman(12*tilesize,14*tilesize,&hugooData,&huHoseData);
+	////////////////////////////// Tree //////////////////////////////////////////////////////////
+
+	#include "treeStatus.cfg"
+
+	myAnimationData treeWoodData = myAnimationData(std::string("src/textures/treeWood.png").insert(0,mainpath));	
+	treeWoodData.addSequence(treeSeq0);
+	treeWoodData.addSequence(treeSeq1);
+	
+	myAnimationData treeLeafsData = myAnimationData(std::string("src/textures/treeLeafsW.png").insert(0,mainpath));
+	treeLeafsData.addTexture(std::string("src/textures/treeLeafs.png").insert(0,mainpath));
+	treeLeafsData.addSequence(treeSeq0);
+	treeLeafsData.addSequence(treeSeq1);
+		
+	myTree tree1 = myTree(16*tilesize,14*tilesize,&treeWoodData,&treeLeafsData);
+	tree1.grow();
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Game Loop
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	view.setCenter(hugooSprite.getPosition());
+	view.setCenter(hugoo.getPosition()+sf::Vector2f(0.f,-32.f));
 	while (window.isOpen()){
 		sf::Event event;
 		while (window.pollEvent(event)){
@@ -290,23 +290,22 @@ int main()
 				case sf::Keyboard::Escape: // Escape pressed : exit
 					window.close();
 					break;
-				case sf::Keyboard::L: // l pressed : Hugoo move right! 
-					hugooSprite.setStatus(1);
-					hugoo2.changeSequence(2);
-					hugoo3.moveRight();
+				case sf::Keyboard::L: // l pressed : Hugoo move right! 										
+					hugoo.moveRight();
 					break;
-				case sf::Keyboard::H: // h pressed : Hugoo move left! 
-					hugooSprite.setStatus(2);
+				case sf::Keyboard::H: // h pressed : Hugoo move left! 					
+					hugoo.moveLeft();
 					break;
-				case sf::Keyboard::J: // j pressed : Hugoo stop moving! 
-					hugoo2.changeSequence(0);
-					hugoo3.beIdle();
+				case sf::Keyboard::J: // j pressed : Hugoo stop moving! 					
+					hugoo.beIdle();
 					break;
-				case sf::Keyboard::F: // F pressed : Hugoo do something!
-					hugooSprite.setStatus(3);
-					hugoo2.changeSequence(1);
-					hugoo3.plant();
-					map.changeTile(hugooSprite.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);
+				case sf::Keyboard::F: // F pressed : Hugoo do something!									
+					hugoo.plant();
+					if(hugoo.getPosition()==tree1.getPosition())
+						tree1.toggleDead();
+					else
+					map.changeTile(hugoo.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);
+					
 					break;
 				case sf::Keyboard::T: // T pressed : toggle following					
 					toggleViewFollowHugoo = !toggleViewFollowHugoo;
@@ -348,23 +347,20 @@ int main()
 			}
 		}
 		window.clear(bgColor);
-		if(toggleViewFollowHugoo){view.setCenter(hugooSprite.getPosition());}
+		if(toggleViewFollowHugoo){view.setCenter(hugoo.getPosition()+sf::Vector2f(0.f,-32.f));}
 		window.setView(view);
-		window.draw(map);
-		hugooSprite.update();
+				
 		tree1.update();
-		tree2.update();
+		//tree2.update();
+		tree1.draw(&window);
+		//window.draw(tree2);	
 
-		hugoo3.update();
-		hugoo3.draw(&window);
+		hugoo.update();
+		hugoo.draw(&window);
 
-		window.draw(tree1);
-		window.draw(tree2);	
 
-		window.draw(hugooSprite);
-
-		hugoo2.update();
-		window.draw(hugoo2);
+		window.draw(map);
+				
 
 		totalFrames++;
 		elapsedFrames++;
