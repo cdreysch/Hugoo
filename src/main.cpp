@@ -22,6 +22,7 @@ public:
 		leafs.setActiveTextureIndex(0);
 		isDead = 0;
 		ticks= 0L;
+		grow();
 	}
 	
 	void draw(sf::RenderWindow *target){
@@ -269,10 +270,10 @@ int main()
 	myAnimationData treeLeafsData = myAnimationData(std::string("src/textures/treeLeafsW.png").insert(0,mainpath));
 	treeLeafsData.addTexture(std::string("src/textures/treeLeafs.png").insert(0,mainpath));
 	treeLeafsData.addSequence(treeSeq0);
-	treeLeafsData.addSequence(treeSeq1);
-		
-	myTree tree1 = myTree(16*tilesize,14*tilesize,&treeWoodData,&treeLeafsData);
-	tree1.grow();
+	treeLeafsData.addSequence(treeSeq1);		
+	
+	std::vector<myTree> trees;
+	trees.emplace_back(myTree(16*tilesize,14*tilesize,&treeWoodData,&treeLeafsData));
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Game Loop
@@ -301,11 +302,11 @@ int main()
 					break;
 				case sf::Keyboard::F: // F pressed : Hugoo do something!									
 					hugoo.plant();
-					if(hugoo.getPosition()==tree1.getPosition())
+					/*if(hugoo.getPosition()==tree1.getPosition())
 						tree1.toggleDead();
 					else
-					map.changeTile(hugoo.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);
-					
+					map.changeTile(hugoo.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);*/
+					trees.emplace_back(myTree(hugoo.getPosition().x,hugoo.getPosition().y,&treeWoodData,&treeLeafsData));					
 					break;
 				case sf::Keyboard::T: // T pressed : toggle following					
 					toggleViewFollowHugoo = !toggleViewFollowHugoo;
@@ -349,11 +350,11 @@ int main()
 		window.clear(bgColor);
 		if(toggleViewFollowHugoo){view.setCenter(hugoo.getPosition()+sf::Vector2f(0.f,-32.f));}
 		window.setView(view);
-				
-		tree1.update();
-		//tree2.update();
-		tree1.draw(&window);
-		//window.draw(tree2);	
+		
+		for (unsigned int i =0; i<trees.size();i++){
+			trees.at(i).update();
+			trees.at(i).draw(&window);
+		}	
 
 		hugoo.update();
 		hugoo.draw(&window);
