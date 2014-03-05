@@ -56,7 +56,7 @@ void myAnimatedObject::update(){
 		if(frameCounter==dataPtr->getSequencePtr(currentSequenceIndex)->getTriggerFrameAt(i)){				
 			currentRectIndex = i;				
 			updateQuadTexture();
-			move(dataPtr->getSequencePtr(currentSequenceIndex)->getMoveAt(i));				
+			move(dataPtr->getSequencePtr(currentSequenceIndex)->getMoveAtf(i));				
 		}
 	}	
 	frameCounter += 1;				
