@@ -25,7 +25,7 @@ class mySequence {
 	sf::Vector2f* 	getMoveAtf(unsigned int index)			{return &movesf.at(index);}
     unsigned int 	getTriggerFrameAt(unsigned int index)	{return triggerFrames.at(index);}
 	unsigned int 	getRectIndexAt(unsigned int index)		{return rectIndices.at(index);}
-    unsigned int 	getLength()								{return textureDispositions.size();}
+    unsigned int 	getLength()								{return triggerFrames.size();}
     unsigned int 	getEndFrame()							{return endFrame;}	
     std::string* 	getName()								{return &name;}
 

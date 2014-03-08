@@ -7,12 +7,12 @@
 
 #define mainpath_win "C:/Users/cdreysch/Hugoo/"
 #define mainpath_unix ""
-#define mainpath mainpath_unix
+#define mainpath mainpath_win
 
-class myTiledTexture {
+class mySpritesheet {
 public:
-	myTiledTexture()									{}
-	myTiledTexture(std::string filename)				{addTexture(filename);}
+	mySpritesheet()									{}
+	mySpritesheet(std::string filename)				{addTexture(filename);}
 
 	bool addTexture(std::string filename);
 	void addRect(int x, int y, int width, int height, int factor=1, int xoff=0, int yoff=0);
@@ -20,6 +20,7 @@ public:
 	sf::Texture* getTexturePtrAt(unsigned int index)	{return &textures.at(index);}
 	sf::IntRect* getTilePtrAt(unsigned int index)		{return &tiles.at(index);}
 	sf::Vector2i* getOffsetPtrAt(unsigned int index)	{return &offsets.at(index);}
+	unsigned int size()									{return offsets.size();}
 
 private:
 	std::vector<sf::Texture> textures;
@@ -27,7 +28,7 @@ private:
 	std::vector<sf::Vector2i> offsets;
 };
 
-bool myTiledTexture::addTexture(std::string filename){
+bool mySpritesheet::addTexture(std::string filename){
 	sf::Image srcImage;			
 	if (!srcImage.loadFromFile(filename)){
 		std::cout << "Datei nicht gefunden: " << filename<< std::endl;
@@ -42,17 +43,17 @@ bool myTiledTexture::addTexture(std::string filename){
 	return 1;
 }
 
-void myTiledTexture::addRect(int x, int y, int width, int height, int factor, int xoff, int yoff){
+void mySpritesheet::addRect(int x, int y, int width, int height, int factor, int xoff, int yoff){
 	tiles.emplace_back(sf::IntRect(x*factor,y*factor,width*factor,height*factor));
 	offsets.emplace_back(sf::Vector2f(xoff*factor,yoff*factor));	
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-class myStaticObject :public sf::Drawable, public sf::Transformable {
+class mySprite :public sf::Drawable, public sf::Transformable {
 public:
-	myStaticObject()								{}
-	myStaticObject(int x, int y, myTiledTexture* ptr);
+	mySprite()								{}
+	mySprite(int x, int y, mySpritesheet* ptr);
 		
-	void setTiledTexturePtr(myTiledTexture* ptr)	{tiledTexturePtr = ptr;}
+	void setTiledTexturePtr(mySpritesheet* ptr)	{tiledTexturePtr = ptr;}
 	void setPosition(int x, int y);
 	void setColor(sf::Color color);
 	void setCurrentTextureIndex(unsigned int index)	{currentTextureIndex = index;}
@@ -71,11 +72,11 @@ public:
 		target.draw(&quad[0],4,sf::Quads, states);  
 	}
 
-private:
+protected:
 	void setQuadTexCoords();
 	void setQuadPosition();
 	void setQuadColor();
-	myTiledTexture* tiledTexturePtr;
+	mySpritesheet* tiledTexturePtr;
 	sf::VertexArray quad;
 	sf::Color color;
 	sf::Vector2i position;	
@@ -83,32 +84,33 @@ private:
 	unsigned int currentRectIndex;
 };
 
-myStaticObject::myStaticObject(int x, int y, myTiledTexture* ptr){
-	quad.resize(4);
-	setPosition(x,y); 
-	setTiledTexturePtr(ptr); 
-	setColor(sf::Color(255,255,255,255));
-	setCurrentTextureIndex(0);
-	setCurrentRectIndex(0);
+mySprite::mySprite(int x, int y, mySpritesheet* ptr){
+	quad.resize(4);	
+	position = sf::Vector2i(x,y);	
+	setTiledTexturePtr(ptr); 			
+	setColor(sf::Color(255,255,255,255));	
+	setCurrentTextureIndex(0);		
+	setCurrentRectIndex(0);	
 }
 
-sf::Vector2i myStaticObject::getDrawingPosition(){
+sf::Vector2i mySprite::getDrawingPosition(){		
 	int xd = position.x+tiledTexturePtr->getOffsetPtrAt(currentRectIndex)->x;
-	int yd = position.y +tiledTexturePtr->getOffsetPtrAt(currentRectIndex)->y;	
+	int yd = position.y+tiledTexturePtr->getOffsetPtrAt(currentRectIndex)->y;	
+	
 	return sf::Vector2i(xd,yd);
 }
 
-void myStaticObject::setPosition(int x, int y){
+void mySprite::setPosition(int x, int y){
 	position = sf::Vector2i(x,y);	
 	setQuadPosition();
 }
 
-void myStaticObject::setColor(sf::Color newcolor){
+void mySprite::setColor(sf::Color newcolor){
 	color = newcolor;
 	setQuadColor();
 }
 
-void myStaticObject::setQuadTexCoords(){
+void mySprite::setQuadTexCoords(){	
 	int tx = tiledTexturePtr->getTilePtrAt(currentRectIndex)->left;
 	int ty = tiledTexturePtr->getTilePtrAt(currentRectIndex)->top;
 	int width = tiledTexturePtr->getTilePtrAt(currentRectIndex)->width;
@@ -120,7 +122,7 @@ void myStaticObject::setQuadTexCoords(){
 	quad[3].texCoords = sf::Vector2f(tx,  ty+height);
 }
 
-void myStaticObject::setQuadPosition(){
+void mySprite::setQuadPosition(){	
 	int x = getDrawingPosition().x;
 	int y = getDrawingPosition().y;
 	int width = tiledTexturePtr->getTilePtrAt(currentRectIndex)->width;
@@ -138,17 +140,17 @@ void myStaticObject::setQuadPosition(){
 	quad[3].position = sf::Vector2f(x,  y+height);
 }
 
-void myStaticObject::setQuadColor(){
+void mySprite::setQuadColor(){
 	quad[0].color = color;
 	quad[1].color = color;
 	quad[2].color = color;
 	quad[3].color = color;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-class myDynamicObject :public myStaticObject{
+class myAnimatedSprite :public mySprite{
 public:
-	myDynamicObject()									{};
-	myDynamicObject(int x, int y, myTiledTexture* ptr);
+	myAnimatedSprite()									{};
+	myAnimatedSprite(int x, int y, mySpritesheet* ptr);
 
 	void update();
 	void addSequencePtr(mySequence* ptr);
@@ -163,36 +165,42 @@ private:
 	unsigned int currentSequenceIndex;
 	unsigned long frameCounter;
 };
-myDynamicObject::myDynamicObject(int x, int y, myTiledTexture* ptr){
-	myStaticObject(x, y, ptr);
-	setCurrentSequenceIndex(0);	
+myAnimatedSprite::myAnimatedSprite(int x, int y, mySpritesheet* ptr){	
+	quad.resize(4);	
+	position = sf::Vector2i(x,y);	
+	setTiledTexturePtr(ptr); 			
+	setColor(sf::Color(255,255,255,255));	
+	setCurrentTextureIndex(0);		
+	setCurrentRectIndex(0);		
+	frameCounter = 0;
+	currentSequenceIndex = 0;
 }
 
-void myDynamicObject::addSequencePtr(mySequence* ptr){
+void myAnimatedSprite::addSequencePtr(mySequence* ptr){
 	seqPtr.emplace_back(ptr);
 }
 
-void myDynamicObject::setCurrentSequenceIndex(unsigned int index){
-	setCurrentRectIndex(0);
+void myAnimatedSprite::setCurrentSequenceIndex(unsigned int index){	
 	frameCounter = 0;
 	currentSequenceIndex = index;
+	setCurrentRectIndex(0);		
 }
 
-bool myDynamicObject::hasEnded(){
+bool myAnimatedSprite::hasEnded(){
 	return frameCounter>seqPtr.at(currentSequenceIndex)->getEndFrame();
 }
 
-void myDynamicObject::update(){
+void myAnimatedSprite::update(){
 	if(hasEnded()){
 		frameCounter = 0;			
-	}
-	for(unsigned int i = 0; i<seqPtr.at(currentSequenceIndex)->getLength();i++){			
-		if(frameCounter==seqPtr.at(currentSequenceIndex)->getTriggerFrameAt(i)){				
-			setCurrentRectIndex(seqPtr.at(currentSequenceIndex)->getRectIndexAt(i));
+	}	
+	for(unsigned int i = 0; i<seqPtr.at(currentSequenceIndex)->getLength();i++){		
+		if(frameCounter==seqPtr.at(currentSequenceIndex)->getTriggerFrameAt(i)){			
+			setCurrentRectIndex(seqPtr.at(currentSequenceIndex)->getRectIndexAt(i));			
 			move(*seqPtr.at(currentSequenceIndex)->getMoveAt(i));				
 		}
 	}	
-	frameCounter += 1;
+	frameCounter += 1;	
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 class myTree {
@@ -453,13 +461,42 @@ int main()
 	treeWoodData.addSequence(treeSeq0);
 	treeWoodData.addSequence(treeSeq1);
 
-	myAnimationData treeLeafsData = myAnimationData(std::string("src/textures/treeLeafsW.png").insert(0,mainpath));
-	treeLeafsData.addTexture(std::string("src/textures/treeLeafs.png").insert(0,mainpath));
+	myAnimationData treeLeafsData = myAnimationData(std::string("src/textures/treeLeafsW.png").insert(0,mainpath));	
 	treeLeafsData.addSequence(treeSeq0);
 	treeLeafsData.addSequence(treeSeq1);		
 
 	std::vector<myTree> trees;
 	trees.emplace_back(myTree(16*tilesize,14*tilesize,&treeWoodData,&treeLeafsData));
+
+	/////////////////////////// Other ///////////////////////////////////////////////////////////////
+	mySpritesheet treeData = mySpritesheet(std::string("src/textures/treeWood.png").insert(0,mainpath));
+	treeData.addTexture(std::string("src/textures/treeLeafsW.png").insert(0,mainpath));
+	treeData.addRect(0,0,1,1,tilesize);
+	treeData.addRect(0,1,1,1,tilesize);
+	treeData.addRect(0,2,1,1,tilesize);
+	treeData.addRect(0,3,1,2,tilesize,0,-1);
+	treeData.addRect(1,1,3,4,tilesize,-1,-3);
+	treeData.addRect(4,0,5,5,tilesize,-2,-4);
+		
+	mySequence treeSeq1a = mySequence("Growing",600);
+	treeSeq1a.addEntry(0,	0,	0,0);
+	treeSeq1a.addEntry(100,	1,	0,0);
+	treeSeq1a.addEntry(200,	2,	0,0);
+	treeSeq1a.addEntry(300,	3,	0,0);
+	treeSeq1a.addEntry(400,	4,	0,0);
+	treeSeq1a.addEntry(500,	5,	0,0);
+
+	mySequence treeSeq0a = mySequence("Standing",2000);
+	treeSeq0a.addEntry(0,	6,	0,0);
+
+	mySprite staticTree = mySprite(10*tilesize,14*tilesize,&treeData);
+	staticTree.setCurrentRectIndex(4);
+
+	myAnimatedSprite dynTree = myAnimatedSprite(8*tilesize,14*tilesize,&treeData);	
+	dynTree.addSequencePtr(&treeSeq0a);	
+	dynTree.addSequencePtr(&treeSeq1a);	
+	dynTree.setCurrentSequenceIndex(1);
+	
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Game Loop
@@ -541,6 +578,10 @@ int main()
 			trees.at(i).update();
 			trees.at(i).draw(&window);
 		}	
+
+		window.draw(staticTree);
+		dynTree.update();
+		window.draw(dynTree);
 
 		hugoo.update();
 		hugoo.draw(&window);
