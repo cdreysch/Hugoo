@@ -11,6 +11,7 @@ class mySprite :public sf::Drawable, public sf::Transformable {
 
     void setSpritesheetPtr(mySpritesheet* ptr)	{spriteSheetPtr = ptr;}
     void setPosition(int x, int y);
+    void setPosition(sf::Vector2i pos) {setPosition(pos.x,pos.y);}
     void setColor(sf::Color color);
     void setCurrentTextureIndex(unsigned int index)	{currentTextureIndex = index;}
     void setCurrentRectIndex(unsigned int index){
@@ -25,6 +26,7 @@ class mySprite :public sf::Drawable, public sf::Transformable {
     sf::Color getColor()							{return color;}
     unsigned int getCurrentTextureIndex()			{return currentTextureIndex;}
     unsigned int getCurrentRectIndex()				{return currentRectIndex;}
+    mySpritesheet* getSpritesheetPtr() 				{return spriteSheetPtr;}
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const{
       states.transform *= getTransform();	

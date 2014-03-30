@@ -6,19 +6,13 @@
 #include "mySpritesheet.h"
 #include "mySprite.h"
 #include "myAnimatedSprite.h"
+#include "myItem.h"
+#include "myHuman.h"
 
 #define mainpath_win "C:/Users/cdreysch/Hugoo/"
 #define mainpath_unix ""
 #define mainpath mainpath_unix
 
-/*class myEquipable {
-
-  }*/
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 class myTree {
   public:
     myTree(int x,int y, mySpritesheet* ptr){	
@@ -97,70 +91,6 @@ class myTree {
     unsigned long ticks;
 };
 
-class myHuman {
-  public:
-    bool hathose = true;
-    myHuman(int x,int y, mySpritesheet* ptr){	
-      const bool bits[] = {1,1,1,1, 1,0,0,0, 1,0,0,0, 1,0,0,0};
-      interruptionTable.insert(interruptionTable.begin(), bits, bits + sizeof(bits)/sizeof(bits[0]));		
-      body = myAnimatedSprite(x,y,ptr);
-      hose = myAnimatedSprite(x,y,ptr);
-      hose.setColor(sf::Color(155,55,55,255));
-      hose.setCurrentTextureIndex(2);
-      currentStatus=0;		
-      body.setCurrentTextureIndex(0);
-    }
-
-    void draw(sf::RenderWindow *target){
-      target->draw(body);
-      if (hathose)
-      target->draw(hose);
-    }
-    void update(){
-      body.update();
-      hose.update();
-      if(body.hasEnded())
-	beIdle();
-    }
-    void moveRight(){	  
-      setCurrentStatus(2);      
-    }
-    void moveLeft(){	  
-      setCurrentStatus(3);      
-    }
-    void beIdle(){			
-      setCurrentStatus(0);		
-    }
-    void plant(){      
-      setCurrentStatus(1);
-    }
-    void setCurrentStatus(unsigned int index){
-      if (isInterruptable(currentStatus, index)){
-	currentStatus = index;	
-	body.setCurrentSequenceIndex(index);
-	hose.setCurrentSequenceIndex(index);		
-      }
-    }
-    bool isIdle(){
-      return body.getCurrentSequenceIndex()==0;
-    }
-    bool isInterruptable(int curStatus,int newStatus){		
-      return interruptionTable.at(curStatus*4+newStatus);
-    }
-    sf::Vector2i getPosition(){
-      position = body.getPosition();
-      return position;
-    }
-
-
-  private:
-    std::vector<bool> interruptionTable;
-    sf::Vector2i position;
-    myAnimatedSprite body;
-    myAnimatedSprite hose;	
-    unsigned int currentStatus;
-};
-
 int main()
 {
   srand (time(NULL));
@@ -202,7 +132,7 @@ int main()
   sf::Int32 elapsedFrames = 0;
   sf::Int32 fpsUpdateFrequency = 10; //Hertz
   sf::Int32 frameratelimit = 50;
-sf::Time elapsedTime = sf::Time();
+  sf::Time elapsedTime = sf::Time();
   sf::Clock clock;
 
   window.setFramerateLimit(frameratelimit);
@@ -257,7 +187,7 @@ sf::Time elapsedTime = sf::Time();
 
   mySpritesheet huData = mySpritesheet(std::string("src/textures/huNaked1.png").insert(0,mainpath));
   huData.addTexture(std::string("src/textures/huNaked2.png").insert(0,mainpath));
-  huData.addTexture(std::string("src/textures/huHose1.png").insert(0,mainpath));
+  huData.addTexture(std::string("src/textures/huCarry1.png").insert(0,mainpath));
 
 #include "hugooStatus.cfg"
 
@@ -270,7 +200,7 @@ sf::Time elapsedTime = sf::Time();
 
   ////////////////////////////// Tree //////////////////////////////////////////////////////////
 
-//#include "treeStatus.cfg"
+  //#include "treeStatus.cfg"
 
   mySpritesheet treeData = mySpritesheet(std::string("src/textures/treeWood.png").insert(0,mainpath));
   treeData.addTexture(std::string("src/textures/treeLeafsW.png").insert(0,mainpath));
@@ -289,7 +219,7 @@ sf::Time elapsedTime = sf::Time();
   treeSeq1a.addEntry(4000,	4,	0,0);
   treeSeq1a.addEntry(5000,	5,	0,0);
 
-  mySequence treeSeq0a = mySequence("Standing",2000);
+  mySequence treeSeq0a = mySequence("Standing",20);
   treeSeq0a.addEntry(0,	5,	0,0);
 
   treeData.addSequencePtr(&treeSeq0a);	
@@ -299,6 +229,52 @@ sf::Time elapsedTime = sf::Time();
   trees.emplace_back(myTree(16*tilesize,14*tilesize,&treeData));
 
 
+  ////////////////////////////// Pants //////////////////////////////////////////////////////////
+
+  mySpritesheet ss_pants1_nouser = mySpritesheet(std::string("src/textures/pants1_nouser.png").insert(0,mainpath));
+  ss_pants1_nouser.defineTile(0,0,1,1,tilesize);
+
+  mySequence seq_pants1_nouser0 = mySequence("Laying",6000);
+  seq_pants1_nouser0.addEntry(0,	0,	0,0);
+  ss_pants1_nouser.addSequencePtr(&seq_pants1_nouser0);
+
+  ////////////////huWear///////////////
+  mySpritesheet ss_pants1_huWear = mySpritesheet(std::string("src/textures/pants1_huWear_tex0.png").insert(0,mainpath));
+  ss_pants1_huWear.addTexture(std::string("src/textures/pants1_huWear_tex1.png").insert(0,mainpath));
+  ss_pants1_huWear.addTexture(std::string("src/textures/pants1_huWear_tex2.png").insert(0,mainpath));
+
+#include "pants1_huWear.ani"
+
+  ss_pants1_huWear.addSequencePtr(&seq_pants_huWear0);
+  ss_pants1_huWear.addSequencePtr(&seq_pants_huWear1);
+  ss_pants1_huWear.addSequencePtr(&seq_pants_huWear2);
+  ss_pants1_huWear.addSequencePtr(&seq_pants_huWear3);
+
+  ////////////////huCarry///////////////
+  mySpritesheet ss_pants1_huCarry = mySpritesheet(std::string("src/textures/pants1_huCarry_tex0.png").insert(0,mainpath));
+  ss_pants1_huCarry.addTexture(std::string("src/textures/pants1_huCarry_tex1.png").insert(0,mainpath));
+  ss_pants1_huCarry.addTexture(std::string("src/textures/pants1_huCarry_tex2.png").insert(0,mainpath));
+
+#include "pants1_huCarry.ani"
+
+  ss_pants1_huCarry.addSequencePtr(&seq_pants_huCarry0);
+  ss_pants1_huCarry.addSequencePtr(&seq_pants_huCarry1);
+  ss_pants1_huCarry.addSequencePtr(&seq_pants_huCarry2);
+  ss_pants1_huCarry.addSequencePtr(&seq_pants_huCarry3);
+
+  myItem pants1 = myItem(18*tilesize,14*tilesize,&ss_pants1_nouser);
+  pants1.setColor(sf::Color(50,200,50));
+  pants1.setWearSSP(&ss_pants1_huWear);
+  pants1.setCarrySSP(&ss_pants1_huCarry);
+
+  myItem pants2 = myItem(28*tilesize,14*tilesize,&ss_pants1_nouser);
+  pants2.setColor(sf::Color(150,80,50));
+  pants2.setWearSSP(&ss_pants1_huWear);
+  pants2.setCarrySSP(&ss_pants1_huCarry);
+
+  std::vector<myItem> items;
+  items.push_back(pants1);
+  items.push_back(pants2);
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   // Game Loop
   /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +291,7 @@ sf::Time elapsedTime = sf::Time();
 	  case sf::Keyboard::Escape: // Escape pressed : exit
 	    window.close();
 	    break;
-	  case sf::Keyboard::L: // l pressed : Hugoo move right! 										
+	  case sf::Keyboard::L: // l pressed : Hugoo move right!
 	    hugoo.moveRight();
 	    break;
 	  case sf::Keyboard::H: // h pressed : Hugoo move left! 					
@@ -324,34 +300,60 @@ sf::Time elapsedTime = sf::Time();
 	  case sf::Keyboard::J: // j pressed : Hugoo stop moving! 					
 	    hugoo.beIdle();
 	    break;
-	  case sf::Keyboard::F: // F pressed : Hugoo do something!									
+	  case sf::Keyboard::S: // j pressed : Hugoo stop moving! 					
+	    break;
+	  case sf::Keyboard::D: // j pressed : Hugoo stop moving! 					
 	    hugoo.plant();
-	    /*if(hugoo.getPosition()==tree1.getPosition())
-	      tree1.toggleDead();
-	      else
-	      map.changeTile(hugoo.getPosition(),(rand() % 2) + 12 + (rand() % 2)*16);*/
-	    trees.emplace_back(myTree(hugoo.getPosition().x,hugoo.getPosition().y,&treeData));					
+	    if(!hugoo.hasPants())
+	      for (unsigned int i =0; i<items.size();i++){
+		if(items.at(i).getPosition()==hugoo.getPosition() && !items.at(i).isUsed())
+		  hugoo.wear(&items.at(i));
+	      }	
+	    else hugoo.unwear();
+	    /*
+	       if(!hugoo.hasPants()){
+	       if(hugoo.isCarrying()){
+	       hugoo.plant();
+	       hugoo.wear();
+	       }
+	       }
+	       else {
+	       if(!hugoo.isCarrying()){
+	       hugoo.plant();
+	       hugoo.unwear();
+	       }
+	       }
+	       */
+	    break;
+	  case sf::Keyboard::F: // F pressed : Hugoo do something!
+	    hugoo.plant();
+	    if(!hugoo.isCarrying())
+	      for (unsigned int i =0; i<items.size();i++){
+		if(items.at(i).getPosition()==hugoo.getPosition() && !items.at(i).isUsed())
+		  hugoo.grab(&items.at(i));
+	      }	
+	    else hugoo.drop();
+	    //trees.emplace_back(myTree(hugoo.getPosition().x,hugoo.getPosition().y,&treeData));					
 	    break;
 	  case sf::Keyboard::T: // T pressed : toggle following					
 	    toggleViewFollowHugoo = !toggleViewFollowHugoo;
-	    hugoo.hathose = !hugoo.hathose;
 	    break;
-	  case sf::Keyboard::W:
-	    toggleViewFollowHugoo = false;
-	    view.move(0.f,-8.f);
-	    break;
-	  case sf::Keyboard::S: 
-	    toggleViewFollowHugoo = false;
-	    view.move(0.f,8.f);
-	    break;
-	  case sf::Keyboard::A: 
-	    toggleViewFollowHugoo = false;
-	    view.move(-8.f,0.f);
-	    break;
-	  case sf::Keyboard::D:
-	    toggleViewFollowHugoo = false;					
-	    view.move(8.f,0.f);			
-	    break;
+	    /* case sf::Keyboard::W:
+	       toggleViewFollowHugoo = false;
+	       view.move(0.f,-8.f);
+	       break;
+	       case sf::Keyboard::S: 
+	       toggleViewFollowHugoo = false;
+	       view.move(0.f,8.f);
+	       break;
+	       case sf::Keyboard::A: 
+	       toggleViewFollowHugoo = false;
+	       view.move(-8.f,0.f);
+	       break;
+	       case sf::Keyboard::D:
+	       toggleViewFollowHugoo = false;					
+	       view.move(8.f,0.f);			
+	       break;*/
 	  case sf::Keyboard::F11: // F11 pressed: toggle fullscreen 
 	    if (!isFullscreen) {
 	      window.close();
@@ -366,20 +368,18 @@ sf::Time elapsedTime = sf::Time();
 	    }
 	    break;
 	  case sf::Keyboard::F12: // F12 pressed: change framerate  
-	    frameratelimit -= 10;
-
-	    if (frameratelimit<0) {
-	      frameratelimit = 50;
-	      window.setFramerateLimit(frameratelimit);
-	    }
+	    if(frameratelimit == 50) frameratelimit=1;
+	    else frameratelimit=50;
+	    window.setFramerateLimit(frameratelimit);
 	    break;
-	default:					
+	  default:					
 	    break;
 	}
       } else if(event.type == sf::Event::KeyReleased) {
 	std::cout << "keycode: " << event.key.code << std::endl;
       }
     }
+    hugoo.update();
     window.clear(bgColor);
     if(toggleViewFollowHugoo){view.setCenter(hugoo.getPosition().x,hugoo.getPosition().y-32);}
     window.setView(view);
@@ -388,13 +388,14 @@ sf::Time elapsedTime = sf::Time();
       trees.at(i).update();
       trees.at(i).draw(&window);
     }	
-
-    hugoo.update();
     hugoo.draw(&window);
 
+    for (unsigned int i =0; i<items.size();i++){
+      items.at(i).update();
+      items.at(i).draw(&window);
+    }	
 
     window.draw(map);
-
 
     totalFrames++;
     elapsedFrames++;
