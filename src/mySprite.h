@@ -4,11 +4,14 @@
 #include <vector>
 #include "mySpritesheet.h"
 
+class mySpriteManager;
+
 class mySprite :public sf::Drawable, public sf::Transformable {
   public:
     mySprite()								{}
     mySprite(int x, int y, mySpritesheet* ptr);
 
+    void setSpriteManagerPtr(mySpriteManager* ptr);
     void setSpritesheetPtr(mySpritesheet* ptr)	{spriteSheetPtr = ptr;}
     void setPosition(int x, int y);
     void setPosition(sf::Vector2i pos) {setPosition(pos.x,pos.y);}
@@ -19,11 +22,13 @@ class mySprite :public sf::Drawable, public sf::Transformable {
       setQuadPosition(); 
       setQuadTexCoords();
     }
+    void setLayer(int i);
     void move(sf::Vector2i dir)						{setPosition(position.x+dir.x,position.y+dir.y);}
 
     sf::Vector2i getDrawingPosition();
     sf::Vector2i getPosition()						{return position;}
     sf::Color getColor()							{return color;}
+    int getLayer() {return layer;}
     unsigned int getCurrentTextureIndex()			{return currentTextureIndex;}
     unsigned int getCurrentRectIndex()				{return currentRectIndex;}
     mySpritesheet* getSpritesheetPtr() 				{return spriteSheetPtr;}
@@ -35,6 +40,7 @@ class mySprite :public sf::Drawable, public sf::Transformable {
     }
 
   protected:
+    int layer;
     void setQuadTexCoords();
     void setQuadPosition();
     void setQuadColor();
@@ -44,6 +50,7 @@ class mySprite :public sf::Drawable, public sf::Transformable {
     sf::Vector2i position;	
     unsigned int currentTextureIndex;
     unsigned int currentRectIndex;
+    mySpriteManager* spriteManagerPtr;
 };
 
 

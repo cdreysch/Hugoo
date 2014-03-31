@@ -14,11 +14,13 @@ class myItem {
     myItem(int x, int y, mySpritesheet* ptr);
 
     sf::Vector2i getPosition() {return sprite.getPosition();}
+    mySprite* getSpritePtr() {return &sprite;}
     
     void setCurrentTextureIndex(unsigned int index) {sprite.setCurrentTextureIndex(index);}
     void setPosition(sf::Vector2i pos) {position = pos; sprite.setPosition(pos);}
     void setCurrentSequenceIndex(unsigned int index) {sprite.setCurrentSequenceIndex(index);}
     void setColor(sf::Color color) {sprite.setColor(color);}
+    void setLayer(int i) {sprite.setLayer(i);}
 
     void setNoUserSSP(mySpritesheet* ptr) {ssp_nouser = ptr;}
     void setWearSSP(mySpritesheet* ptr) {ssp_wear = ptr;}

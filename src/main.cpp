@@ -2,12 +2,14 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include "myTileMap.h"
 #include "mySpritesheet.h"
 #include "mySprite.h"
 #include "myAnimatedSprite.h"
 #include "myItem.h"
 #include "myHuman.h"
+#include "mySpriteManager.h"
 
 #define mainpath_win "C:/Users/cdreysch/Hugoo/"
 #define mainpath_unix ""
@@ -28,6 +30,8 @@ class myTree {
       ticks= 0L;
       grow();
     }
+
+    //mySprite* getSpritePtr() {return &sprite;}
 
     void draw(sf::RenderWindow *target){
       target->draw(wood);
@@ -275,6 +279,24 @@ int main()
   std::vector<myItem> items;
   items.push_back(pants1);
   items.push_back(pants2);
+  /*for(int i = 0; i<1000; i++) {
+    items.emplace_back((28+0*i)*tilesize,14*tilesize,&ss_pants1_nouser);
+    //items.at(2+i).setColor(sf::Color(250-10*i,10*i,100));
+    items.at(2+i).setWearSSP(&ss_pants1_huWear);
+    items.at(2+i).setCarrySSP(&ss_pants1_huCarry);
+  }*/
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Sprite Manager
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  mySpriteManager spriteManager = mySpriteManager();
+  spriteManager.insert(hugoo.getSpritePtr());
+  spriteManager.insert(items.at(0).getSpritePtr());
+  spriteManager.insert(items.at(1).getSpritePtr());
+  /*for(int i = 0; i<1000; i++) {
+    spriteManager.insert(items.at(2+i).getSpritePtr());
+  }*/
   /////////////////////////////////////////////////////////////////////////////////////////////////////
   // Game Loop
   /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,15 +308,26 @@ int main()
       if (event.type == sf::Event::Closed) { // Close window : exit
 	window.close();
       }
+      if (event.type == sf::Event::MouseButtonPressed) {
+	if (event.mouseButton.button == sf::Mouse::Left) {
+	    hugoo.plant();
+	    if(!hugoo.isCarrying())
+	      for (unsigned int i =0; i<items.size();i++){
+		if(items.at(i).getPosition()==hugoo.getPosition() && !items.at(i).isUsed())
+		  hugoo.grab(&items.at(i));
+	      }	
+	    else hugoo.drop();
+	}
+      }
       if (event.type == sf::Event::KeyPressed) {
 	switch (event.key.code) {
 	  case sf::Keyboard::Escape: // Escape pressed : exit
 	    window.close();
 	    break;
-	  case sf::Keyboard::L: // l pressed : Hugoo move right!
+	  case sf::Keyboard::D: // l pressed : Hugoo move right!
 	    hugoo.moveRight();
 	    break;
-	  case sf::Keyboard::H: // h pressed : Hugoo move left! 					
+	  case sf::Keyboard::A: // h pressed : Hugoo move left! 					
 	    hugoo.moveLeft();
 	    break;
 	  case sf::Keyboard::J: // j pressed : Hugoo stop moving! 					
@@ -302,7 +335,7 @@ int main()
 	    break;
 	  case sf::Keyboard::S: // j pressed : Hugoo stop moving! 					
 	    break;
-	  case sf::Keyboard::D: // j pressed : Hugoo stop moving! 					
+	  case sf::Keyboard::E: // j pressed : Hugoo stop moving! 					
 	    hugoo.plant();
 	    if(!hugoo.hasPants())
 	      for (unsigned int i =0; i<items.size();i++){
@@ -325,7 +358,7 @@ int main()
 	       }
 	       */
 	    break;
-	  case sf::Keyboard::F: // F pressed : Hugoo do something!
+	/*  case sf::Keyboard::F: // F pressed : Hugoo do something!
 	    hugoo.plant();
 	    if(!hugoo.isCarrying())
 	      for (unsigned int i =0; i<items.size();i++){
@@ -334,7 +367,7 @@ int main()
 	      }	
 	    else hugoo.drop();
 	    //trees.emplace_back(myTree(hugoo.getPosition().x,hugoo.getPosition().y,&treeData));					
-	    break;
+	    break;*/
 	  case sf::Keyboard::T: // T pressed : toggle following					
 	    toggleViewFollowHugoo = !toggleViewFollowHugoo;
 	    break;
@@ -388,14 +421,16 @@ int main()
       trees.at(i).update();
       trees.at(i).draw(&window);
     }	
-    hugoo.draw(&window);
+    //hugoo.draw(&window);
 
     for (unsigned int i =0; i<items.size();i++){
       items.at(i).update();
-      items.at(i).draw(&window);
+    //  items.at(i).draw(&window);
     }	
 
     window.draw(map);
+
+    spriteManager.draw(&window);
 
     totalFrames++;
     elapsedFrames++;

@@ -1,4 +1,5 @@
 #include "mySprite.h"
+#include "mySpriteManager.h"
 
 mySprite::mySprite(int x, int y, mySpritesheet* ptr){
   quad.resize(4);	
@@ -7,6 +8,8 @@ mySprite::mySprite(int x, int y, mySpritesheet* ptr){
   setColor(sf::Color(255,255,255,255));	
   setCurrentTextureIndex(0);		
   setCurrentRectIndex(0);	
+  layer = 0;
+  spriteManagerPtr = NULL;
 }
 
 sf::Vector2i mySprite::getDrawingPosition(){		
@@ -61,4 +64,15 @@ void mySprite::setQuadColor(){
   quad[1].color = color;
   quad[2].color = color;
   quad[3].color = color;
+}
+
+void mySprite::setSpriteManagerPtr(mySpriteManager* ptr) {
+  spriteManagerPtr = ptr;
+}
+
+void mySprite::setLayer(int i) {
+  layer = i;
+  if(spriteManagerPtr!=NULL) {
+    spriteManagerPtr->sort();
+  }
 }

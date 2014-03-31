@@ -20,6 +20,7 @@ void myHuman::grab(myItem* item){
       slot_legs->setCurrentTextureIndex(2);
     slot_carry = item;
     slot_carry->grabbedBy(this);
+    slot_carry->setLayer(2);
   }
 }
 
@@ -29,6 +30,7 @@ void myHuman::drop(){
     if(hasPants()) 
       slot_legs->setCurrentTextureIndex(1);
     slot_carry->droppedBy(this);
+    slot_carry->setLayer(3);
     slot_carry = NULL;
   }
 }
@@ -37,6 +39,7 @@ void myHuman::wear(myItem* item){
   if(!hasPants()) {
     slot_legs = item;
     slot_legs->wearedBy(this);
+    slot_legs->setLayer(1);
   }
 }
 
@@ -53,6 +56,7 @@ void myHuman::wear(myItem* item){
 void myHuman::unwear(){
   if(hasPants()) {
     slot_legs->unwearedBy(this);
+    slot_legs->setLayer(3);
     slot_legs = NULL;
   }
 }

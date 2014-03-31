@@ -16,6 +16,7 @@ class myHuman {
     unsigned int getCurrentStatus() 			{return currentStatus;}
     unsigned int getCurrentTextureIndex()		{return body.getCurrentTextureIndex();}
     sf::Vector2i getPosition()				{return body.getPosition();}
+    mySprite* getSpritePtr() 				{return &body;}
     
     bool isIdle()					{return body.getCurrentSequenceIndex()==0;}
     bool isInterruptable(int curStatus,int newStatus)	{return interruptionTable.at(curStatus*4+newStatus);}
