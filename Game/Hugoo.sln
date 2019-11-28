@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2015
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hugoo", "Hugoo.vcxproj", "{614EC96B-67EA-4467-9202-B2011C4B2E29}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Debug|x64.ActiveCfg = Debug|x64
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Debug|x64.Build.0 = Debug|x64
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Debug|x86.ActiveCfg = Debug|Win32
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Debug|x86.Build.0 = Debug|Win32
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Release|x64.ActiveCfg = Release|x64
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Release|x64.Build.0 = Release|x64
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Release|x86.ActiveCfg = Release|Win32
+		{614EC96B-67EA-4467-9202-B2011C4B2E29}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1402ECC4-764B-4CA5-A5E0-4F68B4FC65C0}
+	EndGlobalSection
+EndGlobal
